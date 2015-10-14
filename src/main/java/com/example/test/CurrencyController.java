@@ -17,7 +17,7 @@ public class CurrencyController {
     @RequestMapping(value="/rate/{code}/{date}", method= RequestMethod.GET)
     public CurrencyResponse getCurrencyRage(@PathVariable("code") String code,
                                             @PathVariable("date")
-                                            @DateTimeFormat(iso= DateTimeFormat.ISO.DATE) String date) {
-        return new CurrencyResponse("USD", new Date(), 60);
+                                            @DateTimeFormat(iso= DateTimeFormat.ISO.DATE) Date date) {
+        return new CurrencyResponse(code, date, 60);
     }
 }

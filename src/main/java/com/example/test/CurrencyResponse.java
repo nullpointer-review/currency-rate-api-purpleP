@@ -10,7 +10,7 @@ import java.util.Date;
 public class CurrencyResponse {
 
     private String code;
-    JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy/MM/dd")
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy/MM/dd")
     private Date date;
 
     public CurrencyResponse() {
