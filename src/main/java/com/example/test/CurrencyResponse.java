@@ -1,7 +1,9 @@
 package com.example.test;
 
+import com.example.test.centrobank_service.CurrencyData;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -10,7 +12,7 @@ import java.util.Date;
 public class CurrencyResponse {
 
     private String code;
-    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy/MM/dd")
+    @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd")
     private Date date;
 
     public CurrencyResponse() {
