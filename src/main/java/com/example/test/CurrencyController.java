@@ -35,6 +35,12 @@ public class CurrencyController {
     JAXBContext jaxbContext;
     Unmarshaller jaxbUnmarshaller;
 
+
+    /*
+    *
+    * This method could be refactored into CentralBankServiceGateWay class so that int could be mocked for testing.
+    * Also I have suspicions that spring somehow serializes date slightly wrong because of timezones maybe.
+    * */
     private Optional<CurrencyResponse> queryCentralBankForCurrencyRate(Date forDate, String code) {
         try {
             String response = Unirest.get(baseUrl).queryString("date_req", dateFormats[0].format(forDate)).asString().getBody();
@@ -74,7 +80,10 @@ public class CurrencyController {
         return Optional.empty();
     }
 
-
+    /*
+    * Spent a lot of time trying to make Optional<Date> param work. Seems to be impossible in spring.
+    * Could have done custom path variable extractor, but it's not worth it.
+    * */
 
     @RequestMapping(value = "/rate/{code}/**", method = RequestMethod.GET)
     public CurrencyResponse getCurrencyRate(HttpServletRequest servletRequest) {
@@ -105,6 +114,11 @@ public class CurrencyController {
 
     }
 }
+
+/*
+* More specific exceptions should be created (for example for unreadable date format in central bank response
+* Haven't got time to do that.
+* */
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
 class ResourceNotFoundException extends RuntimeException {
 
