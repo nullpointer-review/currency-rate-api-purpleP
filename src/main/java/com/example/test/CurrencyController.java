@@ -28,7 +28,6 @@ import java.util.Optional;
  * Created by mihaildoronin on 14.10.15.
  */
 @RestController()
-@RequestMapping(name = "/rate/")
 public class CurrencyController {
 
     private String baseUrl = "http://cbr.ru/scripts/XML_daily.asp";
@@ -59,18 +58,26 @@ public class CurrencyController {
     }
 
     private CurrencyResponse currencyResponseFromCurrencyData(CurrencyData data, Date date) {
-        return new CurrencyResponse(data.getCode(), date, data.getValue() / data.getNominal());
+        Date d = new Date(date.getTime() + 1000 * 60 * 60 * 3);
+        return new CurrencyResponse(data.getCode(), d, data.getValue() / data.getNominal());
     }
 
 
-    @RequestMapping(value = "{code}**", method = RequestMethod.GET)
+
+
+    @RequestMapping(value = "/rate/{code}/**", method = RequestMethod.GET)
     public CurrencyResponse getCurrencyRate(HttpServletRequest servletRequest) {
 
         Map pathVariables =
                 (Map) servletRequest.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         String code = (String) pathVariables.get("code");
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        String dateAsString = (String) pathVariables.get("date");
+        String [] uriParts = servletRequest.getRequestURI().split("/");
+        String dateAsString = null;
+        if (uriParts.length > 3) {
+            dateAsString = uriParts[3];
+        }
+
         Date date = new Date(new Date().getTime() + (1000 * 60 * 60 * 24));
         if (dateAsString != null) {
             try {
