@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerMapping;
+import sun.util.calendar.Gregorian;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.bind.JAXBContext;
@@ -20,9 +21,7 @@ import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by mihaildoronin on 14.10.15.
@@ -31,13 +30,14 @@ import java.util.Optional;
 public class CurrencyController {
 
     private String baseUrl = "http://cbr.ru/scripts/XML_daily.asp";
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+    private SimpleDateFormat[] dateFormats = {new SimpleDateFormat("dd/MM/yyyy"), new SimpleDateFormat("dd.MM/yyyy")};
+
     JAXBContext jaxbContext;
     Unmarshaller jaxbUnmarshaller;
 
-    private Optional<CurrencyResponse> queryCentralBankForCurrencyRate(Date date, String code) {
+    private Optional<CurrencyResponse> queryCentralBankForCurrencyRate(Date forDate, String code) {
         try {
-            String response = Unirest.get(baseUrl).queryString("date_req", dateFormat.format(date)).asString().getBody();
+            String response = Unirest.get(baseUrl).queryString("date_req", dateFormats[0].format(forDate)).asString().getBody();
             if (jaxbContext == null) {
                 jaxbContext = JAXBContext.newInstance(CentralBankCurrencyResponse.class);
             }
@@ -46,8 +46,9 @@ public class CurrencyController {
             }
             CentralBankCurrencyResponse currencyResponse = (CentralBankCurrencyResponse) jaxbUnmarshaller.unmarshal(new StringReader(response));
             Optional<CurrencyData> data = currencyResponse.getData().stream().filter(currencyData -> currencyData.getCode().equals(code)).findFirst();
+            Date validForDate = parseDate(currencyResponse.getDate(), dateFormats).orElseThrow(() -> new RuntimeException("wrong"));
             if (data.isPresent()) {
-                return Optional.of(currencyResponseFromCurrencyData(data.get(), date));
+                return Optional.of(currencyResponseFromCurrencyData(data.get(), validForDate));
             }
         } catch (UnirestException e) {
             e.printStackTrace();
@@ -62,6 +63,16 @@ public class CurrencyController {
         return new CurrencyResponse(data.getCode(), d, data.getValue() / data.getNominal());
     }
 
+    private Optional<Date> parseDate(String date, SimpleDateFormat[] formats) {
+        for (SimpleDateFormat format: formats) {
+            try {
+                return Optional.of(format.parse(date));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return Optional.empty();
+    }
 
 
 
@@ -73,20 +84,18 @@ public class CurrencyController {
         String code = (String) pathVariables.get("code");
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String [] uriParts = servletRequest.getRequestURI().split("/");
-        String dateAsString = null;
+        Calendar c = new GregorianCalendar(TimeZone.getDefault());
+        c.add(Calendar.DATE, 1);
+        Date forDate = c.getTime();
         if (uriParts.length > 3) {
-            dateAsString = uriParts[3];
-        }
-
-        Date date = new Date(new Date().getTime() + (1000 * 60 * 60 * 24));
-        if (dateAsString != null) {
             try {
-                date = format.parse(dateAsString);
+                forDate = format.parse(uriParts[3]);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
-        Optional<CurrencyResponse> response = queryCentralBankForCurrencyRate(date, code);
+
+        Optional<CurrencyResponse> response = queryCentralBankForCurrencyRate(forDate, code);
         if (response.isPresent()) {
             return response.get();
         }
