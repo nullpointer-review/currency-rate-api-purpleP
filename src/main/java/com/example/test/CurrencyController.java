@@ -46,7 +46,7 @@ public class CurrencyController {
             }
             CentralBankCurrencyResponse currencyResponse = (CentralBankCurrencyResponse) jaxbUnmarshaller.unmarshal(new StringReader(response));
             Optional<CurrencyData> data = currencyResponse.getData().stream().filter(currencyData -> currencyData.getCode().equals(code)).findFirst();
-            Date validForDate = parseDate(currencyResponse.getDate(), dateFormats).orElseThrow(() -> new RuntimeException("wrong"));
+            Date validForDate = parseDate(currencyResponse.getDate(), dateFormats).orElseThrow(() -> new RuntimeException("Unrecognised date format in central bank response "));
             if (data.isPresent()) {
                 return Optional.of(currencyResponseFromCurrencyData(data.get(), validForDate));
             }

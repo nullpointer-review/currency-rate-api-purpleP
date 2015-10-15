@@ -19,7 +19,8 @@ public class CentralBankCurrencyResponseTest {
 
     @Test
     public void testResponseDeserialization() throws JAXBException {
-        File inputFile = new File("/Users/mihaildoronin/Code/currency-service/src/test/resources/test_response.xml");
+
+        File inputFile = new File(Thread.currentThread().getContextClassLoader().getResource("test_response.xml").getFile());
         JAXBContext jaxbContext = JAXBContext.newInstance(CentralBankCurrencyResponse.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         CentralBankCurrencyResponse response = (CentralBankCurrencyResponse) jaxbUnmarshaller.unmarshal(inputFile);
