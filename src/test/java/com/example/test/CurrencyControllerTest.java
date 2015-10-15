@@ -2,6 +2,9 @@ package com.example.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.ReadContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,14 +63,18 @@ public class CurrencyControllerTest {
     public void testGetCurrencyRateWithoutSpecificDate() throws Exception {
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         Calendar c = Calendar.getInstance();
-        c.add(Calendar.DATE, 1);
-        String correctString = f.format(c.getTime());
+        String today = f.format(c.getTime());
 
-        ResultActions response = mockMvc.perform(get("/rate/USD/2015-09-24").accept("application/json"))
+        c.add(Calendar.DATE, 1);
+        String tommorrow = f.format(c.getTime());
+
+        ResultActions response = mockMvc.perform(get("/rate/USD").accept("application/json"))
                 .andExpect(status().isOk());
 //                .andExpect(jsonPath("$.date").value(is(correctString)));
 
         String s = response.andReturn().getResponse().getContentAsString();
-        JsonPath.
+        ReadContext context = JsonPath.parse(s);
+        assertThat(context.read("$.date"),either(is(today)).or(is(tommorrow)));
+
     }
 }
